@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CRUD Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  </head>
+  <body>
+    <h1>CRUD Firebase</h1>
+
+    <!-- Formulario para agregar un nuevo elemento -->
+    <h2>Agregar Elemento</h2>
+    <form id="addForm">
+      <input type="text" id="name" placeholder="Nombre" />
+      <input type="text" id="description" placeholder="Descripción" />
+      <button type="submit">Agregar</button>
+    </form>
+
+    <!-- Lista de elementos -->
+    <h2>Elementos</h2>
+    <ul id="elementList">
+      <!-- Los elementos se mostrarán aquí -->
+    </ul>
+
+    <!-- Formulario para editar un elemento -->
+    <h2>Editar Elemento</h2>
+    <form id="editForm" style="display: none">
+      <input type="hidden" id="editId" />
+      <input type="text" id="editName" placeholder="Nombre" />
+      <input type="text" id="editDescription" placeholder="Descripción" />
+      <button type="submit">Guardar Cambios</button>
+      <button type="button" id="cancelEdit">Cancelar</button>
+    </form>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+      // Configura tu proyecto Firebase aquí
+      const firebaseConfig = {
+        apiKey: "AIzaSyAeEEZ_emfWPXE_0otRIikDrhIvX6QkRXc",
+        authDomain: "catalogo-de-peliculas.firebaseapp.com",
+        projectId: "catalogo-de-peliculas",
+        storageBucket: "catalogo-de-peliculas.appspot.com",
+        messagingSenderId: "622756580786",
+        appId: "1:622756580786:web:161501c96d91d1f047a8ab",
+        measurementId: "G-CTCYFMNYC1",
+      };
+      // Inicializa Firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Referencia a la base de datos
+      var database = firebase.database();
+      var elementRef = database.ref("elementos");
+
+      // Función para agregar un elemento
+      document
+        .getElementById("addForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          var name = document.getElementById("name").value;
+          var description = document.getElementById("description").value;
+          elementRef.push({ name: name, description: description });
+          document.getElementById("name").value = "";
+          document.getElementById("description").value = "";
+        });
+
+      // Función para mostrar elementos
+      elementRef.on("value", function (snapshot) {
+        var elementList = document.getElementById("elementList");
+        elementList.innerHTML = "";
+        snapshot.forEach(function (childSnapshot) {
+          var childData = childSnapshot.val();
+          var listItem = document.createElement("li");
+          listItem.innerHTML = `
+                    ${childData.name}: ${childData.description}
+                    <button onclick="editElement('${childSnapshot.key}', '${childData.name}', '${childData.description}')">Editar</button>
+                    <button onclick="deleteElement('${childSnapshot.key}')">Eliminar</button>
+                `;
+          elementList.appendChild(listItem);
+        });
+      });
+
+      // Función para editar un elemento
+      function editElement(id, name, description) {
+        document.getElementById("editForm").style.display = "block";
+        document.getElementById("editId").value = id;
+        document.getElementById("editName").value = name;
+        document.getElementById("editDescription").value = description;
+      }
+
+      // Función para guardar cambios en un elemento editado
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          var id = document.getElementById("editId").value;
+          var name = document.getElementById("editName").value;
+          var description = document.getElementById("editDescription").value;
+          elementRef.child(id).update({ name: name, description: description });
+          document.getElementById("editForm").style.display = "none";
+        });
+
+      // Función para cancelar la edición de un elemento
+      document
+        .getElementById("cancelEdit")
+        .addEventListener("click", function () {
+          document.getElementById("editForm").style.display = "none";
+        });
+
+      // Función para eliminar un elemento
+      function deleteElement(id) {
+        elementRef.child(id).remove();
+      }
+    </script>
+  </body>
+</html>
